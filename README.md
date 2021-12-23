@@ -28,5 +28,6 @@ All repositories for a user are downloaded and processed concurrently for better
 ## Inspiration and resoning
 
 A lot of the inspiration for this came from https://github.com/mmilidoni/github-downloads-count.
-I wanted to creat something faster that could run without having any Python-stuff installed
-and easily be compiled for multiple platforms.
+I wanted to create something faster that could run without having any Python-stuff installed
+and easily be compiled for multiple platforms. The plan is to have binaries for as
+many 64-bit platforms as possible.
