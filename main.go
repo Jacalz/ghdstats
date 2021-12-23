@@ -48,8 +48,6 @@ func fetchStatistics(repos []repository) {
 		go func(repourl, reponame string) {
 			defer wg.Done()
 
-			fmt.Println(reponame, repourl)
-
 			resp, err := http.Get(repourl)
 			if err != nil {
 				panic(err)
