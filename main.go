@@ -91,12 +91,12 @@ func main() {
 		return
 	}
 
-	repos := []repository{}
+	var repos []repository
 
 	if len(args) == 2 {
-		repos = append(repos, repository{args[0] + "/" + args[1]})
+		repos = []repository{{Name: args[0] + "/" + args[1]}}
 	} else {
-		repos = append(repos, fetchRepositories(args[0])...)
+		repos = fetchRepositories(args[0])
 	}
 
 	fetchStatistics(repos)
