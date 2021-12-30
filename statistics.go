@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -45,6 +46,8 @@ func fetchStatisticsForRepo(repourl, reponame string, wg *sync.WaitGroup) {
 		panic(err)
 	}
 
+	buffer := bytes.Buffer{}
+
 	for _, stat := range stats {
 		if stat.Assets == nil || len(stat.Assets) == 0 {
 			continue
@@ -52,11 +55,15 @@ func fetchStatisticsForRepo(repourl, reponame string, wg *sync.WaitGroup) {
 
 		for _, asset := range stat.Assets {
 			totalDownloads += asset.DownloadCount
-			fmt.Printf("Repo: %s\tAsset: %s\tCount: %d\tDate: %s\n", reponame, asset.Name, asset.DownloadCount, asset.Date.Format(time.RFC850))
+			buffer.WriteString(
+				fmt.Sprintf("Repo: %s\tAsset: %s\tCount: %d\tDate: %s\n", reponame, asset.Name, asset.DownloadCount, asset.Date.Format(time.RFC850)),
+			)
 		}
 
-		fmt.Println()
+		buffer.WriteRune('\n')
 	}
 
-	fmt.Printf("Total downloads for %s: %d\n\n", reponame, totalDownloads)
+	buffer.WriteString(fmt.Sprintf("Total downloads for %s: %d\n\n", reponame, totalDownloads))
+
+	fmt.Print(buffer.String())
 }
