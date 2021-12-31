@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -12,7 +13,7 @@ import (
 type statistics struct {
 	Assets []struct {
 		Name          string    `json:"name"`
-		DownloadCount uint      `json:"download_count"`
+		DownloadCount uint64    `json:"download_count"`
 		Date          time.Time `json:"updated_at"`
 	} `json:"assets"`
 }
@@ -39,7 +40,7 @@ func fetchStatisticsForRepo(repourl, reponame string, wg *sync.WaitGroup) {
 
 	defer resp.Body.Close()
 	stats := []statistics{}
-	totalDownloads := uint(0)
+	totalDownloads := uint64(0)
 
 	err = json.NewDecoder(resp.Body).Decode(&stats)
 	if err != nil {
@@ -56,14 +57,14 @@ func fetchStatisticsForRepo(repourl, reponame string, wg *sync.WaitGroup) {
 		for _, asset := range stat.Assets {
 			totalDownloads += asset.DownloadCount
 			buffer.WriteString(
-				fmt.Sprintf("Repo: %s\tAsset: %s\tCount: %d\tDate: %s\n", reponame, asset.Name, asset.DownloadCount, asset.Date.Format(time.RFC850)),
+				fmt.Sprintf("Repo: %s\tAsset: %s\tCount: %s\tDate: %s\n", reponame, asset.Name, strconv.FormatUint(asset.DownloadCount, 10), asset.Date.Format(time.RFC850)),
 			)
 		}
 
 		buffer.WriteByte('\n')
 	}
 
-	buffer.WriteString(fmt.Sprintf("Total downloads for %s: %d\n\n", reponame, totalDownloads))
+	buffer.WriteString(fmt.Sprintf("Total downloads for %s: %s\n\n", reponame, strconv.FormatUint(totalDownloads, 10)))
 
 	fmt.Print(buffer.String())
 }
