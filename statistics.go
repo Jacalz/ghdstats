@@ -2,12 +2,12 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+	"os"
 )
 
 type statistics struct {
@@ -56,15 +56,32 @@ func fetchStatisticsForRepo(repourl, reponame string, wg *sync.WaitGroup) {
 
 		for _, asset := range stat.Assets {
 			totalDownloads += asset.DownloadCount
-			buffer.WriteString(
-				fmt.Sprintf("Repo: %s\tAsset: %s\tCount: %s\tDate: %s\n", reponame, asset.Name, strconv.FormatUint(asset.DownloadCount, 10), asset.Date.Format(time.RFC850)),
-			)
+
+			buffer.WriteString("Repo: ")
+			buffer.WriteString(reponame)
+			buffer.WriteByte('\t')
+
+			buffer.WriteString("Asset: ")
+			buffer.WriteString(asset.Name)
+			buffer.WriteByte('\t')
+
+			buffer.WriteString("Count: ")
+			buffer.WriteString(strconv.FormatUint(asset.DownloadCount, 10))
+			buffer.WriteByte('\t')
+
+			buffer.WriteString("Date: ")
+			buffer.WriteString(asset.Date.Format(time.RFC850))
+			buffer.WriteByte('\n')
 		}
 
 		buffer.WriteByte('\n')
 	}
 
-	buffer.WriteString(fmt.Sprintf("Total downloads for %s: %s\n\n", reponame, strconv.FormatUint(totalDownloads, 10)))
+	buffer.WriteString("Total downloads for ")
+	buffer.WriteString(reponame)
+	buffer.WriteString(": ")
+	buffer.WriteString(strconv.FormatUint(totalDownloads, 10))
+	buffer.WriteString("\n\n")
 
-	fmt.Print(buffer.String())
+	os.Stdout.WriteString(buffer.String())
 }

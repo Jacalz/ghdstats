@@ -1,14 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"os"
 )
 
 func main() {
 	args := os.Args[1:]
 	if len(args) == 0 || len(args) > 2 {
-		fmt.Println("Usage: gcdstats [user] [repository, optional]")
+		os.Stdout.WriteString("Usage: gcdstats [user] [repository, optional]")
 		return
 	}
 
