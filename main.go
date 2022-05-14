@@ -7,7 +7,7 @@ import (
 func main() {
 	args := os.Args[1:]
 	if len(args) == 0 || len(args) > 2 {
-		os.Stdout.WriteString("Usage: gcdstats [user] [repository, optional]")
+		os.Stdout.WriteString("Usage: gcdstats [user] [repository, optional]\n")
 		return
 	}
 
