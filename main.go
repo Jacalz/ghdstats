@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"strings"
 )
 
 func main() {
@@ -15,6 +16,8 @@ func main() {
 
 	if len(args) == 2 {
 		repos = []repository{{Name: args[0] + "/" + args[1]}}
+	} else if strings.Contains(args[0], "/") {
+		repos = []repository{{Name: args[0]}}
 	} else {
 		repos = fetchRepositories(args[0])
 	}

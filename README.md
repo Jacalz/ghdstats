@@ -1,7 +1,7 @@
 # Ghdstats
 
 Ghdstats is a simple, but very fast, tool to fetch download counts from GitHub releases.
-You just give it a user, or a user and repository, and it gets all the necessary details.
+You just give it a user, or a user and repository, and it fetches all the necessary details for you.
 
 ## Usage
 
@@ -10,14 +10,19 @@ The general usage of the program works like this:
 $ ghdstats [user] [repository, optional]
 ```
 
-As an example, you can get all the data for [fyne-io/calculator](https://github.com/fyne-io/calculator):
+As an example, you can get all the data for [jacalz/rymdport](https://github.com/jacalz/rymdport):
 ```
-$ ghdstats fyne-io calculator
+$ ghdstats jacalz rymdport
 ```
 
-Or, you can alternatively get data for all repositories in [fyne-io](https://github.com/fyne-io):
+The same command can also be written as this:
 ```
-$ ghdstats fyne-io
+$ ghdstats jacalz/rymdport
+```
+
+The tool can also fetch all downloads for a given user or organization:
+```
+$ ghdstats jacalz
 ```
 
 ## Performance
@@ -28,6 +33,5 @@ All repositories for a user are downloaded and processed concurrently for better
 ## Inspiration and resoning
 
 A lot of the inspiration for this came from https://github.com/mmilidoni/github-downloads-count.
-I wanted to create something faster that could run without having any Python-stuff installed
-and easily be compiled for multiple platforms. The plan is to have binaries for as
+THe idea was to create a faster tool without any need for Python. The plan is to have binaries for as
 many 64-bit platforms as possible.
