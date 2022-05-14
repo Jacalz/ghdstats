@@ -3,11 +3,11 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
-	"os"
 )
 
 type statistics struct {
@@ -63,7 +63,7 @@ func fetchStatisticsForRepo(repourl, reponame string, wg *sync.WaitGroup) {
 
 			buffer.WriteString("Asset: ")
 			buffer.WriteString(asset.Name)
-			buffer.WriteByte('\t')
+			buffer.WriteString("\t\t")
 
 			buffer.WriteString("Count: ")
 			buffer.WriteString(strconv.FormatUint(asset.DownloadCount, 10))
