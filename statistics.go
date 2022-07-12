@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"net/http"
@@ -22,15 +23,18 @@ func fetchStatistics(repos []repository) {
 	wg := &sync.WaitGroup{}
 	wg.Add(len(repos))
 
+	stdout := bufio.NewWriter(os.Stdout)
+	defer stdout.Flush()
+
 	const reposApiEndpoint = "https://api.github.com/repos/"
 	for _, repo := range repos {
-		go fetchStatisticsForRepo(reposApiEndpoint+repo.Name+"/releases", repo.Name, wg)
+		go fetchStatisticsForRepo(reposApiEndpoint+repo.Name+"/releases", repo.Name, stdout, wg)
 	}
 
 	wg.Wait()
 }
 
-func fetchStatisticsForRepo(repourl, reponame string, wg *sync.WaitGroup) {
+func fetchStatisticsForRepo(repourl, reponame string, stdout *bufio.Writer, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	resp, err := http.Get(repourl)
@@ -83,5 +87,5 @@ func fetchStatisticsForRepo(repourl, reponame string, wg *sync.WaitGroup) {
 	buffer.WriteString(strconv.FormatUint(totalDownloads, 10))
 	buffer.WriteString("\n\n")
 
-	os.Stdout.Write(buffer.Bytes())
+	stdout.Write(buffer.Bytes())
 }
