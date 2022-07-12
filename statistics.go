@@ -1,11 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 )
@@ -47,7 +47,7 @@ func fetchStatisticsForRepo(repourl, reponame string, wg *sync.WaitGroup) {
 		panic(err)
 	}
 
-	buffer := strings.Builder{}
+	buffer := bytes.Buffer{}
 
 	for _, stat := range stats {
 		if stat.Assets == nil || len(stat.Assets) == 0 {
@@ -83,5 +83,5 @@ func fetchStatisticsForRepo(repourl, reponame string, wg *sync.WaitGroup) {
 	buffer.WriteString(strconv.FormatUint(totalDownloads, 10))
 	buffer.WriteString("\n\n")
 
-	os.Stdout.WriteString(buffer.String())
+	os.Stdout.Write(buffer.Bytes())
 }
