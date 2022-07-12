@@ -5,32 +5,7 @@ You just give it a user, or a user and repository, and it fetches all the necess
 
 ## Installation
 
-The cli command can be downloaded by running the following command (using Go 1.16 or above):
-```
-$ go install github.com/Jacalz/ghdstats@latest
-```
-
-## Usage
-
-The general usage of the program works like this:
-```
-$ ghdstats [user] [repository, optional]
-```
-
-As an example, you can get all the data for [jacalz/rymdport](https://github.com/jacalz/rymdport):
-```
-$ ghdstats jacalz rymdport
-```
-
-The same command can also be written as this:
-```
-$ ghdstats jacalz/rymdport
-```
-
-The tool can also fetch all downloads for a given user or organization:
-```
-$ ghdstats jacalz
-```
+TODO: This software is pending a rewrite in Rust (from a learning point-of-view).
 
 ## Performance
 
