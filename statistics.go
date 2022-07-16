@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"net/http"
 	"os"
@@ -47,7 +46,7 @@ func fetchStatisticsForRepo(repourl, reponame string, wg *sync.WaitGroup) {
 		panic(err)
 	}
 
-	buffer := bytes.Buffer{}
+	buffer := make([]byte, 0, 30+len(reponame))
 
 	for _, stat := range stats {
 		if stat.Assets == nil || len(stat.Assets) == 0 {
@@ -57,31 +56,31 @@ func fetchStatisticsForRepo(repourl, reponame string, wg *sync.WaitGroup) {
 		for _, asset := range stat.Assets {
 			totalDownloads += asset.DownloadCount
 
-			buffer.WriteString("Repo: ")
-			buffer.WriteString(reponame)
-			buffer.WriteByte('\t')
+			buffer = append(buffer, "Repo: "...)
+			buffer = append(buffer, reponame...)
+			buffer = append(buffer, '\t')
 
-			buffer.WriteString("Asset: ")
-			buffer.WriteString(asset.Name)
-			buffer.WriteString("\t\t")
+			buffer = append(buffer, "Asset: "...)
+			buffer = append(buffer, asset.Name...)
+			buffer = append(buffer, '\t', '\t')
 
-			buffer.WriteString("Count: ")
-			buffer.WriteString(strconv.FormatUint(asset.DownloadCount, 10))
-			buffer.WriteByte('\t')
+			buffer = append(buffer, "Count: "...)
+			buffer = strconv.AppendUint(buffer, asset.DownloadCount, 10)
+			buffer = append(buffer, '\t')
 
-			buffer.WriteString("Date: ")
-			buffer.WriteString(asset.Date.Format(time.RFC850))
-			buffer.WriteByte('\n')
+			buffer = append(buffer, "Date: "...)
+			buffer = asset.Date.AppendFormat(buffer, time.RFC850)
+			buffer = append(buffer, '\n')
 		}
 
-		buffer.WriteByte('\n')
+		buffer = append(buffer, '\n')
 	}
 
-	buffer.WriteString("Total downloads for ")
-	buffer.WriteString(reponame)
-	buffer.WriteString(": ")
-	buffer.WriteString(strconv.FormatUint(totalDownloads, 10))
-	buffer.WriteString("\n\n")
+	buffer = append(buffer, "Total downloads for "...)
+	buffer = append(buffer, reponame...)
+	buffer = append(buffer, ':', ' ')
+	buffer = strconv.AppendUint(buffer, totalDownloads, 10)
+	buffer = append(buffer, '\n', '\n')
 
-	os.Stdout.Write(buffer.Bytes())
+	os.Stdout.Write(buffer)
 }
