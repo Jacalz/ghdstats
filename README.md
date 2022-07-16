@@ -40,5 +40,5 @@ All repositories for a user are downloaded and processed concurrently for better
 ## Inspiration and resoning
 
 A lot of the inspiration for this came from https://github.com/mmilidoni/github-downloads-count.
-THe idea was to create a faster tool without any need for Python. The plan is to have binaries for as
+The idea was to create a faster tool without any need for Python. The plan is to have binaries for as
 many 64-bit platforms as possible.
