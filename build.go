@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sync"
 )
 
 type target struct {
@@ -35,19 +36,28 @@ var targets = []target{
 func main() {
 	os.MkdirAll("release", 0750)
 
-	for _, t := range targets {
-		path := filepath.Join("release", "ghdstats-"+t.goos+"-"+t.goarch)
-		if t.goos == "windows" {
-			path += ".exe"
-		}
+	var wg sync.WaitGroup
+	wg.Add(len(targets))
 
-		cmd := exec.Command("go", "build", "-trimpath", "-ldflags", "-s -w", "-o", path)
-		cmd.Env = append(os.Environ(), "GOOS="+t.goos, "GOARCH="+t.goarch)
+	for _, tar := range targets {
+		go func(t target) {
+			path := filepath.Join("release", "ghdstats-"+t.goos+"-"+t.goarch)
+			if t.goos == "windows" {
+				path += ".exe"
+			}
 
-		out, err := cmd.CombinedOutput()
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s %s err: %s, out: %s\n", t.goos, t.goarch, err, out)
-			os.Exit(1)
-		}
+			cmd := exec.Command("go", "build", "-trimpath", "-ldflags", "-s -w", "-o", path)
+			cmd.Env = append(os.Environ(), "GOOS="+t.goos, "GOARCH="+t.goarch)
+
+			out, err := cmd.CombinedOutput()
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "%s %s err: %s, out: %s\n", t.goos, t.goarch, err, out)
+				os.Exit(1)
+			}
+
+			wg.Done()
+		}(tar)
 	}
+
+	wg.Wait()
 }
