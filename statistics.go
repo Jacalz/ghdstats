@@ -7,6 +7,7 @@ import (
 	"sync"
 	"fmt"
 	"time"
+	"os"
 )
 
 type statistics struct {
@@ -46,6 +47,8 @@ func fetchStatisticsForRepo(repourl, reponame string, wg *sync.WaitGroup) {
 		panic(err)
 	}
 
+	buffer := make([]byte, 0, 30+len(reponame))
+
 	for _, stat := range stats {
 		if stat.Assets == nil || len(stat.Assets) == 0 {
 			continue
@@ -53,18 +56,22 @@ func fetchStatisticsForRepo(repourl, reponame string, wg *sync.WaitGroup) {
 
 		for _, asset := range stat.Assets {
 			totalDownloads += asset.DownloadCount
-
-			fmt.Printf("Repo: %-20v Asset: %-40v Count: %-5v Date: %s\n",
+			
+			buffer = fmt.Appendf(buffer, "Repo: %-20v Asset: %-40v Count: %-5v",
 				reponame,
 				asset.Name,
 				strconv.FormatUint(asset.DownloadCount, 10),
-				asset.Date.Format(time.RFC850),
 			)
-		}
 
-		fmt.Println()
+			buffer = asset.Date.AppendFormat(buffer, time.RFC850)
+			buffer = append(buffer, '\n')
+		}
+		buffer = append(buffer, '\n')
 	}
 
+	buffer = fmt.Appendf(buffer, "Total downloads for %s: ", reponame)
+	buffer = strconv.AppendUint(buffer, totalDownloads, 10)
+	buffer = append(buffer, '\n')
 
-	fmt.Printf("Total downloads for %s: %s\n\n", reponame,  strconv.FormatUint(totalDownloads, 10))
+	os.Stdout.Write(buffer)
 }
