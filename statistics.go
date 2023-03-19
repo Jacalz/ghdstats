@@ -3,9 +3,9 @@ package main
 import (
 	"encoding/json"
 	"net/http"
-	"os"
 	"strconv"
 	"sync"
+	"fmt"
 	"time"
 )
 
@@ -46,8 +46,6 @@ func fetchStatisticsForRepo(repourl, reponame string, wg *sync.WaitGroup) {
 		panic(err)
 	}
 
-	buffer := make([]byte, 0, 30+len(reponame))
-
 	for _, stat := range stats {
 		if stat.Assets == nil || len(stat.Assets) == 0 {
 			continue
@@ -56,31 +54,17 @@ func fetchStatisticsForRepo(repourl, reponame string, wg *sync.WaitGroup) {
 		for _, asset := range stat.Assets {
 			totalDownloads += asset.DownloadCount
 
-			buffer = append(buffer, "Repo: "...)
-			buffer = append(buffer, reponame...)
-			buffer = append(buffer, '\t')
-
-			buffer = append(buffer, "Asset: "...)
-			buffer = append(buffer, asset.Name...)
-			buffer = append(buffer, '\t', '\t')
-
-			buffer = append(buffer, "Count: "...)
-			buffer = strconv.AppendUint(buffer, asset.DownloadCount, 10)
-			buffer = append(buffer, '\t')
-
-			buffer = append(buffer, "Date: "...)
-			buffer = asset.Date.AppendFormat(buffer, time.RFC850)
-			buffer = append(buffer, '\n')
+			fmt.Printf("Repo: %-20v Asset: %-40v Count: %-5v Date: %s\n",
+				reponame,
+				asset.Name,
+				strconv.FormatUint(asset.DownloadCount, 10),
+				asset.Date.Format(time.RFC850),
+			)
 		}
 
-		buffer = append(buffer, '\n')
+		fmt.Println()
 	}
 
-	buffer = append(buffer, "Total downloads for "...)
-	buffer = append(buffer, reponame...)
-	buffer = append(buffer, ':', ' ')
-	buffer = strconv.AppendUint(buffer, totalDownloads, 10)
-	buffer = append(buffer, '\n', '\n')
 
-	os.Stdout.Write(buffer)
+	fmt.Printf("Total downloads for %s: %s\n\n", reponame,  strconv.FormatUint(totalDownloads, 10))
 }
