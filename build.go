@@ -10,6 +10,8 @@ import (
 	"sync"
 )
 
+const version = "v1.1.0"
+
 type target struct {
 	goos   string
 	goarch string
@@ -41,7 +43,7 @@ func main() {
 
 	for _, tar := range targets {
 		go func(t target) {
-			path := filepath.Join("release", "ghdstats-"+t.goos+"-"+t.goarch)
+			path := filepath.Join("release", "ghdstats-"+version+"-"+t.goos+"-"+t.goarch)
 			if t.goos == "windows" {
 				path += ".exe"
 			}
