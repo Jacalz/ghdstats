@@ -5,10 +5,12 @@
 *.so
 *.dylib
 ghdstats
+build
 
 # Various archive formats
 *.zip
 *.tar
+release
 
 # Test binary, built with `go test -c`
 *.test
