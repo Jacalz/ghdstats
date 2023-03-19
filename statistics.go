@@ -35,7 +35,10 @@ func fetchStatisticsForRepo(repourl, reponame string, wg *sync.WaitGroup) {
 
 	resp, err := http.Get(repourl)
 	if err != nil {
-		panic(err)
+		os.Stderr.WriteString("Error: The HTTP get request failed. Error message: ")
+		os.Stderr.WriteString(err.Error())
+		os.Stderr.WriteString("\n")
+		os.Exit(1)
 	}
 
 	defer resp.Body.Close()
@@ -44,7 +47,10 @@ func fetchStatisticsForRepo(repourl, reponame string, wg *sync.WaitGroup) {
 
 	err = json.NewDecoder(resp.Body).Decode(&stats)
 	if err != nil {
-		panic(err)
+		os.Stderr.WriteString("Error: Failed to decode JSON data. A likely culprit is that the GitHub API limit was likely reached.\nTry again in a few hours. Error message: ")
+		os.Stderr.WriteString(err.Error())
+		os.Stderr.WriteString("\n")
+		os.Exit(1)
 	}
 
 	buffer := make([]byte, 0, 4096)
