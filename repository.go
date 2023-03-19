@@ -17,6 +17,7 @@ func fetchRepositories(user string) []repository {
 		os.Stderr.WriteString("Error: The HTTP get request failed. Error message: ")
 		os.Stderr.WriteString(err.Error())
 		os.Stderr.WriteString("\n")
+		os.Exit(1)
 	}
 
 	defer resp.Body.Close()
