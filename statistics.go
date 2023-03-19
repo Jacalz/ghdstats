@@ -47,7 +47,7 @@ func fetchStatisticsForRepo(repourl, reponame string, wg *sync.WaitGroup) {
 		panic(err)
 	}
 
-	buffer := make([]byte, 0, 30+len(reponame))
+	buffer := make([]byte, 0, 4096)
 
 	for _, stat := range stats {
 		if stat.Assets == nil || len(stat.Assets) == 0 {
