@@ -6,6 +6,8 @@
 *.dylib
 ghdstats
 build
+zig-cache
+zig-out
 
 # Various archive formats
 *.zip
