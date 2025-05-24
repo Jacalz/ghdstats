@@ -40,6 +40,8 @@ func fetchStatisticsForRepo(repourl, reponame string) error {
 	resp, err := http.Get(repourl)
 	if err != nil {
 		return err
+	} else if resp.StatusCode == http.StatusForbidden {
+		return errorRateLimitExceeded
 	}
 
 	defer resp.Body.Close()

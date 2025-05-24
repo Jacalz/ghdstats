@@ -1,10 +1,13 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
 )
+
+var errorRateLimitExceeded = errors.New("rate limit for GitHub API was likely exceeded")
 
 func main() {
 	args := os.Args[1:]
@@ -22,7 +25,7 @@ func main() {
 	} else {
 		allRepos, err := fetchRepositories(args[0])
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to fetch repositories. A likely culprit is that the GitHub API rate limit was exceeded. Error message: %v\n", err)
+			fmt.Fprintf(os.Stderr, "Failed to fetch repositories: %v\n", err)
 			os.Exit(1)
 		}
 
@@ -31,7 +34,7 @@ func main() {
 
 	err := fetchStatistics(repos)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to fetch statistics. A likely culprit is that the GitHub API rate limit was exceeded. Error message: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Failed to fetch statistics: %v\n", err)
 		os.Exit(1)
 	}
 }

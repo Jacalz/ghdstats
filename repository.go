@@ -15,6 +15,8 @@ func fetchRepositories(user string) ([]repository, error) {
 	resp, err := http.Get(usersApiEndpoint + user + "/repos")
 	if err != nil {
 		return nil, err
+	} else if resp.StatusCode == http.StatusForbidden {
+		return nil, errorRateLimitExceeded
 	}
 
 	defer resp.Body.Close()
