@@ -6,9 +6,12 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"sync"
 	"time"
+
+	"golang.org/x/sync/errgroup"
 )
+
+const reposApiEndpoint = "https://api.github.com/repos/"
 
 type statistics struct {
 	Assets []struct {
@@ -18,25 +21,25 @@ type statistics struct {
 	} `json:"assets"`
 }
 
-func fetchStatistics(repos []repository) {
-	wg := sync.WaitGroup{}
-	wg.Add(len(repos))
-
-	const reposApiEndpoint = "https://api.github.com/repos/"
-	for _, repo := range repos {
-		go fetchStatisticsForRepo(reposApiEndpoint+repo.Name+"/releases", repo.Name, &wg)
+func fetchStatistics(repos []repository) error {
+	if len(repos) == 1 {
+		return fetchStatisticsForRepo(reposApiEndpoint+repos[0].Name+"/releases", repos[0].Name)
 	}
 
-	wg.Wait()
+	wg := errgroup.Group{}
+	for _, repo := range repos {
+		wg.Go(func() error {
+			return fetchStatisticsForRepo(reposApiEndpoint+repo.Name+"/releases", repo.Name)
+		})
+	}
+
+	return wg.Wait()
 }
 
-func fetchStatisticsForRepo(repourl, reponame string, wg *sync.WaitGroup) {
-	defer wg.Done()
-
+func fetchStatisticsForRepo(repourl, reponame string) error {
 	resp, err := http.Get(repourl)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: The HTTP get request failed. Error message: %v\n", err)
-		os.Exit(1)
+		return err
 	}
 
 	defer resp.Body.Close()
@@ -45,8 +48,7 @@ func fetchStatisticsForRepo(repourl, reponame string, wg *sync.WaitGroup) {
 
 	err = json.NewDecoder(resp.Body).Decode(&stats)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: Failed to decode JSON data. A likely culprit is that the GitHub API limit was reached.\nTry again in a few hours. Error message: %v\n", err)
-		os.Exit(1)
+		return err
 	}
 
 	buffer := make([]byte, 0, 4096)
@@ -75,5 +77,6 @@ func fetchStatisticsForRepo(repourl, reponame string, wg *sync.WaitGroup) {
 	buffer = strconv.AppendUint(buffer, totalDownloads, 10)
 	buffer = append(buffer, '\n')
 
-	os.Stdout.Write(buffer)
+	_, err = os.Stdout.Write(buffer)
+	return err
 }

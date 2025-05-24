@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"strings"
 )
@@ -19,8 +20,18 @@ func main() {
 	} else if strings.Contains(args[0], "/") {
 		repos = []repository{{Name: args[0]}}
 	} else {
-		repos = fetchRepositories(args[0])
+		allRepos, err := fetchRepositories(args[0])
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to fetch repositories. A likely culprit is that the GitHub API rate limit was exceeded. Error message: %v\n", err)
+			os.Exit(1)
+		}
+
+		repos = allRepos
 	}
 
-	fetchStatistics(repos)
+	err := fetchStatistics(repos)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to fetch statistics. A likely culprit is that the GitHub API rate limit was exceeded. Error message: %v\n", err)
+		os.Exit(1)
+	}
 }
