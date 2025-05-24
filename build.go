@@ -10,7 +10,7 @@ import (
 	"sync"
 )
 
-const version = "v1.1.0"
+const version = "v1.2.0"
 
 type target struct {
 	goos   string

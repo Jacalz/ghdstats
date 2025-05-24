@@ -19,12 +19,12 @@ type statistics struct {
 }
 
 func fetchStatistics(repos []repository) {
-	wg := &sync.WaitGroup{}
+	wg := sync.WaitGroup{}
 	wg.Add(len(repos))
 
 	const reposApiEndpoint = "https://api.github.com/repos/"
 	for _, repo := range repos {
-		go fetchStatisticsForRepo(reposApiEndpoint+repo.Name+"/releases", repo.Name, wg)
+		go fetchStatisticsForRepo(reposApiEndpoint+repo.Name+"/releases", repo.Name, &wg)
 	}
 
 	wg.Wait()
@@ -35,9 +35,7 @@ func fetchStatisticsForRepo(repourl, reponame string, wg *sync.WaitGroup) {
 
 	resp, err := http.Get(repourl)
 	if err != nil {
-		os.Stderr.WriteString("Error: The HTTP get request failed. Error message: ")
-		os.Stderr.WriteString(err.Error())
-		os.Stderr.WriteString("\n")
+		fmt.Fprintf(os.Stderr, "Error: The HTTP get request failed. Error message: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -47,9 +45,7 @@ func fetchStatisticsForRepo(repourl, reponame string, wg *sync.WaitGroup) {
 
 	err = json.NewDecoder(resp.Body).Decode(&stats)
 	if err != nil {
-		os.Stderr.WriteString("Error: Failed to decode JSON data. A likely culprit is that the GitHub API limit was likely reached.\nTry again in a few hours. Error message: ")
-		os.Stderr.WriteString(err.Error())
-		os.Stderr.WriteString("\n")
+		fmt.Fprintf(os.Stderr, "Error: Failed to decode JSON data. A likely culprit is that the GitHub API limit was reached.\nTry again in a few hours. Error message: %v\n", err)
 		os.Exit(1)
 	}
 

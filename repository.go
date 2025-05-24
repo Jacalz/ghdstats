@@ -2,21 +2,21 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 )
+
+const usersApiEndpoint = "https://api.github.com/users/"
 
 type repository struct {
 	Name string `json:"full_name"`
 }
 
 func fetchRepositories(user string) []repository {
-	const usersApiEndpoint = "https://api.github.com/users/"
 	resp, err := http.Get(usersApiEndpoint + user + "/repos")
 	if err != nil {
-		os.Stderr.WriteString("Error: The HTTP get request failed. Error message: ")
-		os.Stderr.WriteString(err.Error())
-		os.Stderr.WriteString("\n")
+		fmt.Fprintf(os.Stderr, "Error: The HTTP get request failed. Error message: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -25,9 +25,7 @@ func fetchRepositories(user string) []repository {
 
 	err = json.NewDecoder(resp.Body).Decode(&repos)
 	if err != nil {
-		os.Stderr.WriteString("Error: Failed to decode JSON data. A likely culprit is that the GitHub API limit was likely reached.\nTry again in a few hours. Error message: ")
-		os.Stderr.WriteString(err.Error())
-		os.Stderr.WriteString("\n")
+		fmt.Fprintf(os.Stderr, "Error: Failed to decode JSON data. A likely culprit is that the GitHub API limit was reached.\nTry again in a few hours. Error message: %v\n")
 		os.Exit(1)
 	}
 
