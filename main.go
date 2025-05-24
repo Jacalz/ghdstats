@@ -12,7 +12,7 @@ var errorRateLimitExceeded = errors.New("rate limit for GitHub API was likely ex
 func main() {
 	args := os.Args[1:]
 	if len(args) == 0 || len(args) > 2 {
-		os.Stdout.WriteString("Usage: gcdstats [user] [repository, optional]\n")
+		fmt.Fprintln(os.Stderr, "Usage: gcdstats [user] [repository, optional]")
 		os.Exit(1)
 	}
 

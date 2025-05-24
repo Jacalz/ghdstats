@@ -23,21 +23,21 @@ type statistics struct {
 
 func fetchStatistics(repos []repository) error {
 	if len(repos) == 1 {
-		return fetchStatisticsForRepo(reposApiEndpoint+repos[0].Name+"/releases", repos[0].Name)
+		return fetchStatisticsForRepo(repos[0].Name)
 	}
 
 	wg := errgroup.Group{}
 	for _, repo := range repos {
 		wg.Go(func() error {
-			return fetchStatisticsForRepo(reposApiEndpoint+repo.Name+"/releases", repo.Name)
+			return fetchStatisticsForRepo(repo.Name)
 		})
 	}
 
 	return wg.Wait()
 }
 
-func fetchStatisticsForRepo(repourl, reponame string) error {
-	resp, err := http.Get(repourl)
+func fetchStatisticsForRepo(reponame string) error {
+	resp, err := http.Get(reposApiEndpoint + reponame + "/releases")
 	if err != nil {
 		return err
 	} else if resp.StatusCode == http.StatusForbidden {
