@@ -2,12 +2,12 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"sync"
-	"fmt"
 	"time"
-	"os"
 )
 
 type statistics struct {
@@ -56,13 +56,13 @@ func fetchStatisticsForRepo(repourl, reponame string, wg *sync.WaitGroup) {
 	buffer := make([]byte, 0, 4096)
 
 	for _, stat := range stats {
-		if stat.Assets == nil || len(stat.Assets) == 0 {
+		if stat.Assets == nil {
 			continue
 		}
 
 		for _, asset := range stat.Assets {
 			totalDownloads += asset.DownloadCount
-			
+
 			buffer = fmt.Appendf(buffer, "Repo: %-20v Asset: %-40v Count: %-5v",
 				reponame,
 				asset.Name,

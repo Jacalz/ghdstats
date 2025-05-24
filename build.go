@@ -36,7 +36,7 @@ var targets = []target{
 }
 
 func main() {
-	os.MkdirAll("release", 0750)
+	os.MkdirAll("release", 0o750)
 
 	var wg sync.WaitGroup
 	wg.Add(len(targets))

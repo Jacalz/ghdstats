@@ -2,8 +2,8 @@ package main
 
 import (
 	"encoding/json"
-	"os"
 	"net/http"
+	"os"
 )
 
 type repository struct {
