@@ -7,17 +7,18 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"sync"
+
+	"golang.org/x/sync/errgroup"
 )
 
 const version = "v1.2.0"
 
 type target struct {
-	goos   string
-	goarch string
+	os   string
+	arch string
 }
 
-var targets = []target{
+var targets = [...]target{
 	{"linux", "amd64"},
 	{"linux", "arm64"},
 
@@ -36,30 +37,34 @@ var targets = []target{
 }
 
 func main() {
-	os.MkdirAll("release", 0o750)
+	err := os.MkdirAll("builds", 0o750)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to create builds directory: %v\n", err)
+		os.Exit(1)
+	}
 
-	var wg sync.WaitGroup
-	wg.Add(len(targets))
-
+	wg := errgroup.Group{}
 	for _, tar := range targets {
-		go func(t target) {
-			path := filepath.Join("release", "ghdstats-"+version+"-"+t.goos+"-"+t.goarch)
-			if t.goos == "windows" {
+		wg.Go(func() error {
+			path := filepath.Join("builds", "ghdstats-"+version+"-"+tar.os+"-"+tar.arch)
+			if tar.os == "windows" {
 				path += ".exe"
 			}
 
 			cmd := exec.Command("go", "build", "-trimpath", "-ldflags", "-s -w", "-o", path)
-			cmd.Env = append(os.Environ(), "GOOS="+t.goos, "GOARCH="+t.goarch)
-
-			out, err := cmd.CombinedOutput()
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "%s %s err: %s, out: %s\n", t.goos, t.goarch, err, out)
-				os.Exit(1)
+			cmd.Env = append(os.Environ(), "GOOS="+tar.os, "GOARCH="+tar.arch)
+			if tar.arch == "amd64" {
+				cmd.Env = append(cmd.Env, "GOAMD64=v3")
 			}
 
-			wg.Done()
-		}(tar)
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			return cmd.Run()
+		})
 	}
 
-	wg.Wait()
+	if err := wg.Wait(); err != nil {
+		fmt.Fprintf(os.Stderr, "Build failed: %v\n", err)
+		os.Exit(1)
+	}
 }

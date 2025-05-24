@@ -10,7 +10,7 @@ build
 # Various archive formats
 *.zip
 *.tar
-release
+builds
 
 # Test binary, built with `go test -c`
 *.test
