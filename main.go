@@ -10,6 +10,11 @@ import (
 var errorRateLimitExceeded = errors.New("rate limit for GitHub API was likely exceeded")
 
 func main() {
+	stop := profile()
+	if stop != nil {
+		defer stop()
+	}
+
 	args := os.Args[1:]
 	if len(args) == 0 || len(args) > 2 {
 		fmt.Fprintln(os.Stderr, "Usage: gcdstats [user] [repository, optional]")
