@@ -43,7 +43,7 @@ fn fetch_repos(user: &str) -> Result<Vec<Repo>, reqwest::Error> {
     headers.insert("User-Agent", HeaderValue::from_static("ghdstats/v1.3.0"));
 
     client
-        .get(format!("https://api.github.com/users/{}/repos", user))
+        .get(format!("https://api.github.com/users/{user}/repos"))
         .headers(headers)
         .send()?
         .json()
@@ -51,7 +51,7 @@ fn fetch_repos(user: &str) -> Result<Vec<Repo>, reqwest::Error> {
 
 fn fetch_statistics(repos: &Vec<Repo>) -> Result<(), reqwest::Error> {
     for repo in repos {
-        print_repo_info(&repo)?;
+        print_repo_info(repo)?;
     }
     Ok(())
 }

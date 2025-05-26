@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build
-        run: cargo build --verbose
+        run: cargo build
 
       - name: Cache
         uses: actions/cache@v4
@@ -25,7 +25,7 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Lint
-        run: cargo clippy --verbose
+        run: cargo clippy -- -Dclippy::pedantic
 
       - name: Test
-        run: cargo test --verbose
+        run: cargo test
