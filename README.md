@@ -3,6 +3,8 @@
 Ghdstats is a simple, but very fast, tool to fetch download counts from GitHub releases.
 You just give it a user, or a user and repository, and it fetches all the necessary details for you.
 
+NOTE: This tool is currently in the process of being rewritten in Rust!
+
 ## Installation
 
 The cli command can be downloaded by running the following command (using Go 1.24 or above):
