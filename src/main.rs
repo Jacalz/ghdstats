@@ -9,6 +9,7 @@ struct Repo {
 
 #[derive(Deserialize)]
 struct Release {
+    tag_name: String,
     assets: Vec<Asset>,
 }
 
@@ -16,10 +17,9 @@ struct Release {
 struct Asset {
     name: String,
     download_count: u64,
-    updated_at: String,
 }
 
-fn main() {
+fn main() -> Result<(), reqwest::Error> {
     let args: Vec<String> = env::args().collect();
 
     let mut repos: Vec<Repo> = Vec::new();
@@ -30,11 +30,12 @@ fn main() {
         }),
         _ => {
             println!("Usage: gcdstats [user] [repository, optional]");
-            return;
+            return Ok(());
         }
     }
 
-    fetch_statistics(&repos).unwrap();
+    fetch_statistics(&repos)?;
+    Ok(())
 }
 
 fn fetch_repos(user: &str) -> Result<Vec<Repo>, reqwest::Error> {
@@ -51,36 +52,50 @@ fn fetch_repos(user: &str) -> Result<Vec<Repo>, reqwest::Error> {
 
 fn fetch_statistics(repos: &Vec<Repo>) -> Result<(), reqwest::Error> {
     for repo in repos {
-        print_repo_info(repo)?;
+        print_repo_info(&repo.full_name)?;
     }
     Ok(())
 }
 
-fn print_repo_info(repo: &Repo) -> Result<(), reqwest::Error> {
+fn print_repo_info(full_name: &str) -> Result<(), reqwest::Error> {
     let client = reqwest::blocking::Client::new();
     let mut headers = HeaderMap::new();
     headers.insert("User-Agent", HeaderValue::from_static("ghdstats/v1.3.0"));
 
     let info: Vec<Release> = client
-        .get(format!(
-            "https://api.github.com/repos/{}/releases",
-            repo.full_name
-        ))
+        .get(format!("https://api.github.com/repos/{full_name}/releases",))
         .headers(headers)
         .send()?
         .json()?;
 
-    let mut total_downloads: u64 = 0;
+    println!("Releases for {full_name}:");
+    if info.is_empty() {
+        println!("- No releases!");
+    }
 
+    let mut total_downloads: u64 = 0;
     for release in info {
+        if release.assets.is_empty() {
+            continue;
+        }
+
+        let old_count = total_downloads;
+
+        println!("{}:", release.tag_name);
         for asset in release.assets {
+            if asset.download_count == 0 {
+                continue;
+            }
+
             total_downloads += asset.download_count;
+            println!("- {}: {}", asset.name, asset.download_count);
+        }
+
+        if old_count == total_downloads {
+            println!("- No downloads!");
         }
     }
 
-    println!(
-        "Total downloads for {}: {}",
-        repo.full_name, total_downloads
-    );
+    println!("Total downloads: {total_downloads}");
     Ok(())
 }
