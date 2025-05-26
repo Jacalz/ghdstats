@@ -32,9 +32,9 @@ fn main() -> Result<(), reqwest::Error> {
             full_name: format!("{}/{}", &args[1], &args[2]),
         }),
         2 => {
-            let parts: Vec<&str> = args[1].split("/").collect();
+            let parts: Vec<&str> = args[1].split('/').collect();
             match parts.len() {
-                1 => repos = fetch_repos(&parts[0])?,
+                1 => repos = fetch_repos(parts[0])?,
                 2 => repos.push(Repo {
                     full_name: String::from(&args[1]),
                 }),
