@@ -1,5 +1,7 @@
 use reqwest::header::{HeaderMap, HeaderValue};
 use serde::Deserialize;
+use std::error;
+use std::io::{self, Write};
 
 #[derive(Deserialize)]
 pub struct Repo {
@@ -30,14 +32,14 @@ pub fn fetch_repos(user: &str) -> Result<Vec<Repo>, reqwest::Error> {
         .json()
 }
 
-pub fn fetch_statistics(repos: &Vec<Repo>) -> Result<(), reqwest::Error> {
+pub fn fetch_statistics(repos: &Vec<Repo>) -> Result<(), Box<dyn error::Error>> {
     for repo in repos {
         print_repo_info(&repo.full_name)?;
     }
     Ok(())
 }
 
-pub fn print_repo_info(full_name: &str) -> Result<(), reqwest::Error> {
+pub fn print_repo_info(full_name: &str) -> Result<(), Box<dyn error::Error>> {
     let client = reqwest::blocking::Client::new();
     let mut headers = HeaderMap::new();
     headers.insert("User-Agent", HeaderValue::from_static("ghdstats/v1.3.0"));
@@ -48,9 +50,11 @@ pub fn print_repo_info(full_name: &str) -> Result<(), reqwest::Error> {
         .send()?
         .json()?;
 
-    println!("Releases for {full_name}:");
+    let mut buffer: Vec<u8> = Vec::with_capacity(1024);
+
+    writeln!(&mut buffer, "Releases for {full_name}:")?;
     if info.is_empty() {
-        println!("- No releases!");
+        writeln!(&mut buffer, "- No releases!")?;
     }
 
     let mut total_downloads: u64 = 0;
@@ -61,21 +65,22 @@ pub fn print_repo_info(full_name: &str) -> Result<(), reqwest::Error> {
 
         let old_count = total_downloads;
 
-        println!("{}:", release.tag_name);
+        writeln!(&mut buffer, "{}:", release.tag_name)?;
         for asset in release.assets {
             if asset.download_count == 0 {
                 continue;
             }
 
             total_downloads += asset.download_count;
-            println!("- {}: {}", asset.name, asset.download_count);
+            writeln!(&mut buffer, "- {}: {}", asset.name, asset.download_count)?;
         }
 
         if old_count == total_downloads {
-            println!("- No downloads!");
+            writeln!(&mut buffer, "- No downloads!")?;
         }
     }
 
-    println!("Total downloads: {total_downloads}");
+    writeln!(&mut buffer, "Total downloads: {total_downloads}")?;
+    io::stdout().write_all(&buffer)?;
     Ok(())
 }

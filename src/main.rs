@@ -1,9 +1,10 @@
 use std::env;
+use std::error;
 
 mod fetch;
 use fetch::{Repo, fetch_repos, fetch_statistics};
 
-fn main() -> Result<(), reqwest::Error> {
+fn main() -> Result<(), Box<dyn error::Error>> {
     let args: Vec<String> = env::args().collect();
 
     let mut repos: Vec<Repo> = Vec::new();
