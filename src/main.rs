@@ -5,7 +5,7 @@ use std::error;
 fn main() -> Result<(), Box<dyn error::Error>> {
     let args: Vec<String> = env::args().collect();
 
-    let mut client = api::Client::new();
+    let mut client = api::Client::new()?;
     match args.len() {
         0 | 1 | 4.. => {
             println!("Usage: gcdstats [user] [repository, optional]");

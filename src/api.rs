@@ -27,17 +27,17 @@ pub struct Client {
 }
 
 impl Client {
-    pub fn new() -> Self {
+    pub fn new() -> Result<Self, reqwest::Error> {
         let mut headers = HeaderMap::new();
         headers.insert("User-Agent", HeaderValue::from_static("ghdstats/v1.3.0"));
+        let client = reqwest::blocking::Client::builder()
+            .default_headers(headers)
+            .build()?;
 
-        Self {
+        Ok(Self {
             repos: Vec::new(),
-            client: reqwest::blocking::Client::builder()
-                .default_headers(headers)
-                .build()
-                .unwrap(),
-        }
+            client,
+        })
     }
 
     pub fn add_repo(&mut self, full_name: String) {
