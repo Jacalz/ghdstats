@@ -1,8 +1,9 @@
+use rayon::ThreadPoolBuilder;
+use rayon::prelude::*;
 use reqwest::header::{HeaderMap, HeaderValue};
 use serde::Deserialize;
 use std::error;
 use std::io::{self, Error, Write};
-use std::thread;
 
 #[derive(Deserialize)]
 pub struct Repo {
@@ -59,20 +60,14 @@ impl Client {
     }
 
     pub fn print_downloads(&self) {
-        let mut handles = Vec::with_capacity(self.repos.len());
-
-        for repo in &self.repos {
-            let client = self.client.clone();
-            let full_name = repo.full_name.clone();
-            let handle = thread::spawn(move || {
+        let pool = ThreadPoolBuilder::new().build().unwrap();
+        pool.install(|| {
+            self.repos.par_iter().for_each(|repo| {
+                let client = self.client.clone();
+                let full_name = repo.full_name.clone();
                 print_downloads_for_repo(&client, &full_name).unwrap();
             });
-            handles.push(handle);
-        }
-
-        for handle in handles {
-            handle.join().unwrap();
-        }
+        });
     }
 }
 
@@ -81,7 +76,7 @@ fn print_downloads_for_repo(
     full_name: &str,
 ) -> Result<(), Box<dyn error::Error>> {
     let resp = client
-        .get(format!("https://api.github.com/repos/{full_name}/releases",))
+        .get(format!("https://api.github.com/repos/{full_name}/releases"))
         .send()?;
     if !resp.status().is_success() {
         return Err(Box::new(Error::other("exceeded GitHub API rate limit!")));
