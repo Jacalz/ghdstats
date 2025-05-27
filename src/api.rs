@@ -1,7 +1,7 @@
 use reqwest::header::{HeaderMap, HeaderValue};
 use serde::Deserialize;
 use std::error;
-use std::io::{self, Error, ErrorKind, Write};
+use std::io::{self, Error, Write};
 use std::thread;
 
 #[derive(Deserialize)]
@@ -52,16 +52,13 @@ impl Client {
             .send()?;
 
         if !resp.status().is_success() {
-            return Err(Box::new(Error::new(
-                ErrorKind::Other,
-                "exceeded GitHub API rate limit!",
-            )));
+            return Err(Box::new(Error::other("exceeded GitHub API rate limit!")));
         }
         self.repos = resp.json()?;
         Ok(())
     }
 
-    pub fn print_downloads(&self) -> Result<(), Box<dyn error::Error>> {
+    pub fn print_downloads(&self) {
         let mut handles = Vec::with_capacity(self.repos.len());
 
         for repo in &self.repos {
@@ -72,10 +69,10 @@ impl Client {
             });
             handles.push(handle);
         }
+
         for handle in handles {
             handle.join().unwrap();
         }
-        Ok(())
     }
 }
 
@@ -87,10 +84,7 @@ fn print_downloads_for_repo(
         .get(format!("https://api.github.com/repos/{full_name}/releases",))
         .send()?;
     if !resp.status().is_success() {
-        return Err(Box::new(Error::new(
-            ErrorKind::Other,
-            "exceeded GitHub API rate limit!",
-        )));
+        return Err(Box::new(Error::other("exceeded GitHub API rate limit!")));
     }
 
     let info: Vec<Release> = resp.json()?;

@@ -25,5 +25,6 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         }
     }
 
-    client.print_downloads()
+    client.print_downloads();
+    Ok(())
 }
