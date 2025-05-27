@@ -1,7 +1,7 @@
 use reqwest::header::{HeaderMap, HeaderValue};
 use serde::Deserialize;
 use std::error;
-use std::io::{self, Write};
+use std::io::{self, Error, ErrorKind, Write};
 
 #[derive(Deserialize)]
 pub struct Repo {
@@ -44,19 +44,20 @@ impl Client {
         self.repos.push(Repo { full_name });
     }
 
-    pub fn lookup_repos(&mut self, user: &str) -> Result<(), reqwest::Error> {
-        match self
+    pub fn lookup_repos(&mut self, user: &str) -> Result<(), Box<dyn error::Error>> {
+        let resp = self
             .client
             .get(format!("https://api.github.com/users/{user}/repos"))
-            .send()?
-            .json()
-        {
-            Ok(repos) => {
-                self.repos = repos;
-                Ok(())
-            }
-            Err(err) => Err(err),
+            .send()?;
+
+        if !resp.status().is_success() {
+            return Err(Box::new(Error::new(
+                ErrorKind::Other,
+                "exceeded GitHub API rate limit!",
+            )));
         }
+        self.repos = resp.json()?;
+        Ok(())
     }
 
     pub fn print_downloads(&self) -> Result<(), Box<dyn error::Error>> {
@@ -67,14 +68,20 @@ impl Client {
     }
 
     fn print_downloads_for_repo(&self, full_name: &str) -> Result<(), Box<dyn error::Error>> {
-        let info: Vec<Release> = self
+        let resp = self
             .client
             .get(format!("https://api.github.com/repos/{full_name}/releases",))
-            .send()?
-            .json()?;
+            .send()?;
+        if !resp.status().is_success() {
+            return Err(Box::new(Error::new(
+                ErrorKind::Other,
+                "exceeded GitHub API rate limit!",
+            )));
+        }
+
+        let info: Vec<Release> = resp.json()?;
 
         let mut buffer: Vec<u8> = Vec::with_capacity(1024);
-
         writeln!(&mut buffer, "Releases for {full_name}:")?;
         if info.is_empty() {
             writeln!(&mut buffer, "- No releases!")?;
