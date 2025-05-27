@@ -2,6 +2,7 @@ use reqwest::header::{HeaderMap, HeaderValue};
 use serde::Deserialize;
 use std::error;
 use std::io::{self, Error, ErrorKind, Write};
+use std::thread;
 
 #[derive(Deserialize)]
 pub struct Repo {
@@ -61,57 +62,69 @@ impl Client {
     }
 
     pub fn print_downloads(&self) -> Result<(), Box<dyn error::Error>> {
+        let mut handles = Vec::with_capacity(self.repos.len());
+
         for repo in &self.repos {
-            self.print_downloads_for_repo(&repo.full_name)?;
+            let client = self.client.clone();
+            let full_name = repo.full_name.clone();
+            let handle = thread::spawn(move || {
+                print_downloads_for_repo(&client, &full_name).unwrap();
+            });
+            handles.push(handle);
+        }
+        for handle in handles {
+            handle.join().unwrap();
         }
         Ok(())
     }
+}
 
-    fn print_downloads_for_repo(&self, full_name: &str) -> Result<(), Box<dyn error::Error>> {
-        let resp = self
-            .client
-            .get(format!("https://api.github.com/repos/{full_name}/releases",))
-            .send()?;
-        if !resp.status().is_success() {
-            return Err(Box::new(Error::new(
-                ErrorKind::Other,
-                "exceeded GitHub API rate limit!",
-            )));
+fn print_downloads_for_repo(
+    client: &reqwest::blocking::Client,
+    full_name: &str,
+) -> Result<(), Box<dyn error::Error>> {
+    let resp = client
+        .get(format!("https://api.github.com/repos/{full_name}/releases",))
+        .send()?;
+    if !resp.status().is_success() {
+        return Err(Box::new(Error::new(
+            ErrorKind::Other,
+            "exceeded GitHub API rate limit!",
+        )));
+    }
+
+    let info: Vec<Release> = resp.json()?;
+
+    let mut buffer: Vec<u8> = Vec::with_capacity(1024);
+    writeln!(&mut buffer, "Releases for {full_name}:")?;
+    if info.is_empty() {
+        writeln!(&mut buffer, "- No releases!")?;
+    }
+
+    let mut total_downloads: u64 = 0;
+    for release in info {
+        if release.assets.is_empty() {
+            continue;
         }
 
-        let info: Vec<Release> = resp.json()?;
+        let old_count = total_downloads;
 
-        let mut buffer: Vec<u8> = Vec::with_capacity(1024);
-        writeln!(&mut buffer, "Releases for {full_name}:")?;
-        if info.is_empty() {
-            writeln!(&mut buffer, "- No releases!")?;
-        }
-
-        let mut total_downloads: u64 = 0;
-        for release in info {
-            if release.assets.is_empty() {
+        writeln!(&mut buffer, "{}:", release.tag_name)?;
+        for asset in release.assets {
+            if asset.download_count == 0 {
                 continue;
             }
 
-            let old_count = total_downloads;
-
-            writeln!(&mut buffer, "{}:", release.tag_name)?;
-            for asset in release.assets {
-                if asset.download_count == 0 {
-                    continue;
-                }
-
-                total_downloads += asset.download_count;
-                writeln!(&mut buffer, "- {}: {}", asset.name, asset.download_count)?;
-            }
-
-            if old_count == total_downloads {
-                writeln!(&mut buffer, "- No downloads!")?;
-            }
+            total_downloads += asset.download_count;
+            writeln!(&mut buffer, "- {}: {}", asset.name, asset.download_count)?;
         }
 
-        writeln!(&mut buffer, "Total downloads: {total_downloads}")?;
-        io::stdout().write_all(&buffer)?;
-        Ok(())
+        if old_count == total_downloads {
+            writeln!(&mut buffer, "- No downloads!")?;
+        }
     }
+
+    writeln!(&mut buffer, "Total downloads: {total_downloads}")?;
+    io::stdout().write_all(&buffer)?;
+    Ok(())
 }
