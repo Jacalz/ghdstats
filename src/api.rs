@@ -1,9 +1,11 @@
 use rayon::ThreadPoolBuilder;
 use rayon::prelude::*;
-use reqwest::header::{HeaderMap, HeaderValue};
+use reqwest::header::HeaderValue;
 use serde::Deserialize;
 use std::error;
 use std::io::{self, Error, Write};
+
+static USER_AGENT: HeaderValue = HeaderValue::from_static("ghdstats/v1.3.0");
 
 #[derive(Deserialize)]
 pub struct Repo {
@@ -24,22 +26,11 @@ struct Asset {
 
 pub struct Client {
     pub repos: Vec<Repo>,
-
-    client: reqwest::blocking::Client,
 }
 
 impl Client {
-    pub fn new() -> Result<Self, reqwest::Error> {
-        let mut headers = HeaderMap::new();
-        headers.insert("User-Agent", HeaderValue::from_static("ghdstats/v1.3.0"));
-        let client = reqwest::blocking::Client::builder()
-            .default_headers(headers)
-            .build()?;
-
-        Ok(Self {
-            repos: Vec::new(),
-            client,
-        })
+    pub fn new() -> Self {
+        Self { repos: Vec::new() }
     }
 
     pub fn add_repo(&mut self, full_name: String) {
@@ -47,9 +38,9 @@ impl Client {
     }
 
     pub fn lookup_repos(&mut self, user: &str) -> Result<(), Box<dyn error::Error>> {
-        let resp = self
-            .client
+        let resp = reqwest::blocking::Client::new()
             .get(format!("https://api.github.com/users/{user}/repos"))
+            .header("User-Agent", USER_AGENT.clone())
             .send()?;
 
         if !resp.status().is_success() {
@@ -63,20 +54,16 @@ impl Client {
         let pool = ThreadPoolBuilder::new().build().unwrap();
         pool.install(|| {
             self.repos.par_iter().for_each(|repo| {
-                let client = self.client.clone();
-                let full_name = repo.full_name.clone();
-                print_downloads_for_repo(&client, &full_name).unwrap();
+                print_downloads_for_repo(&repo.full_name).unwrap();
             });
         });
     }
 }
 
-fn print_downloads_for_repo(
-    client: &reqwest::blocking::Client,
-    full_name: &str,
-) -> Result<(), Box<dyn error::Error>> {
-    let resp = client
+fn print_downloads_for_repo(full_name: &String) -> Result<(), Box<dyn error::Error>> {
+    let resp = reqwest::blocking::Client::new()
         .get(format!("https://api.github.com/repos/{full_name}/releases"))
+        .header("User-Agent", USER_AGENT.clone())
         .send()?;
     if !resp.status().is_success() {
         return Err(Box::new(Error::other("exceeded GitHub API rate limit!")));
