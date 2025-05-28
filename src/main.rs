@@ -16,7 +16,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
             let parts: Vec<&str> = args[1].split('/').collect();
             match parts.len() {
                 1 => client.lookup_repos(parts[0])?,
-                2 => client.add_repo(args[1].clone()),
+                2 => return api::print_downloads_for_repo(&args[1]),
                 _ => {
                     println!("Invalid input format");
                     return Ok(());

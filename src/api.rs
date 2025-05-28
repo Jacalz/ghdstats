@@ -40,7 +40,7 @@ impl Client {
     pub fn lookup_repos(&mut self, user: &str) -> Result<(), Box<dyn error::Error>> {
         let resp = reqwest::blocking::Client::new()
             .get(format!("https://api.github.com/users/{user}/repos"))
-            .header("User-Agent", USER_AGENT.clone())
+            .header("User-Agent", &USER_AGENT)
             .send()?;
 
         if !resp.status().is_success() {
@@ -60,10 +60,10 @@ impl Client {
     }
 }
 
-fn print_downloads_for_repo(full_name: &String) -> Result<(), Box<dyn error::Error>> {
+pub fn print_downloads_for_repo(full_name: &String) -> Result<(), Box<dyn error::Error>> {
     let resp = reqwest::blocking::Client::new()
         .get(format!("https://api.github.com/repos/{full_name}/releases"))
-        .header("User-Agent", USER_AGENT.clone())
+        .header("User-Agent", &USER_AGENT)
         .send()?;
     if !resp.status().is_success() {
         return Err(Box::new(Error::other("exceeded GitHub API rate limit!")));
