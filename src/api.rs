@@ -46,13 +46,14 @@ impl Client {
         Ok(())
     }
 
-    pub fn print_all_downloads(&self) {
-        let pool = ThreadPoolBuilder::new().build().unwrap();
+    pub fn print_all_downloads(&self) -> Result<(), Box<dyn error::Error>> {
+        let pool = ThreadPoolBuilder::new().build()?;
         pool.install(|| {
             self.repos.par_iter().for_each(|repo| {
                 self.print_downloads_for_repo(&repo.full_name).unwrap();
             });
         });
+        Ok(())
     }
 
     pub fn print_downloads_for_repo(
