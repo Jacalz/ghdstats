@@ -11,12 +11,12 @@ fn main() -> Result<(), Box<dyn error::Error>> {
             println!("Usage: gcdstats [user] [repository, optional]");
             return Ok(());
         }
-        3 => client.add_repo(format!("{}/{}", &args[1], &args[2])),
+        3 => return client.print_downloads_for_repo(&format!("{}/{}", &args[1], &args[2])),
         2 => {
             let parts: Vec<&str> = args[1].split('/').collect();
             match parts.len() {
                 1 => client.lookup_repos(parts[0])?,
-                2 => return api::print_downloads_for_repo(&args[1]),
+                2 => return client.print_downloads_for_repo(&args[1]),
                 _ => {
                     println!("Invalid input format");
                     return Ok(());
@@ -25,6 +25,6 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         }
     }
 
-    client.print_downloads();
+    client.print_all_downloads();
     Ok(())
 }
