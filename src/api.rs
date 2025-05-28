@@ -33,7 +33,7 @@ impl Client {
         Self { repos: Vec::new() }
     }
 
-    pub fn lookup_repos(&mut self, user: &str) -> Result<(), Box<dyn error::Error>> {
+    pub fn lookup_repos(&mut self, user: &str) -> Result<&Client, Box<dyn error::Error>> {
         let resp = reqwest::blocking::Client::new()
             .get(format!("https://api.github.com/users/{user}/repos"))
             .header("User-Agent", &USER_AGENT)
@@ -43,23 +43,20 @@ impl Client {
             return Err(Box::new(Error::other("exceeded GitHub API rate limit!")));
         }
         self.repos = resp.json()?;
-        Ok(())
+        Ok(self)
     }
 
     pub fn print_all_downloads(&self) -> Result<(), Box<dyn error::Error>> {
         let pool = ThreadPoolBuilder::new().build()?;
         pool.install(|| {
             self.repos.par_iter().for_each(|repo| {
-                self.print_downloads_for_repo(&repo.full_name).unwrap();
+                Client::print_downloads_for_repo(&repo.full_name).unwrap();
             });
         });
         Ok(())
     }
 
-    pub fn print_downloads_for_repo(
-        &self,
-        full_name: &String,
-    ) -> Result<(), Box<dyn error::Error>> {
+    pub fn print_downloads_for_repo(full_name: &String) -> Result<(), Box<dyn error::Error>> {
         let resp = reqwest::blocking::Client::new()
             .get(format!("https://api.github.com/repos/{full_name}/releases"))
             .header("User-Agent", &USER_AGENT)
