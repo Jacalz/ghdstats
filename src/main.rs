@@ -1,13 +1,14 @@
 mod api;
 use std::env;
-use std::error;
+use std::error::Error;
+use std::process;
 
-fn main() -> Result<(), Box<dyn error::Error>> {
+fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<String> = env::args().collect();
     match args.len() {
         0 | 1 | 4.. => {
-            println!("Usage: gcdstats [user] [repository, optional]");
-            Ok(())
+            eprintln!("Usage: gcdstats [user] [repository, optional]");
+            process::exit(1);
         }
         3 => api::Client::print_downloads_for_repo(&format!("{}/{}", &args[1], &args[2])),
         2 => {
@@ -18,8 +19,8 @@ fn main() -> Result<(), Box<dyn error::Error>> {
                     .print_all_downloads(),
                 2 => api::Client::print_downloads_for_repo(&args[1]),
                 _ => {
-                    println!("Invalid input format");
-                    Ok(())
+                    eprintln!("Invalid input format");
+                    process::exit(1);
                 }
             }
         }

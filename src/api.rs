@@ -2,9 +2,10 @@ use rayon::ThreadPoolBuilder;
 use rayon::prelude::*;
 use reqwest::header::HeaderValue;
 use serde::Deserialize;
-use std::error;
-use std::io::{self, Error, Write};
+use std::error::Error;
+use std::io::{self, Write};
 
+static RATE_LIMIT_ERROR_TEXT: &str = "exceeded GitHub API rate limit!";
 static USER_AGENT: HeaderValue = HeaderValue::from_static("ghdstats/v1.3.0");
 
 #[derive(Deserialize)]
@@ -33,20 +34,20 @@ impl Client {
         Self { repos: Vec::new() }
     }
 
-    pub fn lookup_repos(&mut self, user: &str) -> Result<&Client, Box<dyn error::Error>> {
+    pub fn lookup_repos(&mut self, user: &str) -> Result<&Client, Box<dyn Error>> {
         let resp = reqwest::blocking::Client::new()
             .get(format!("https://api.github.com/users/{user}/repos"))
             .header("User-Agent", &USER_AGENT)
             .send()?;
 
         if !resp.status().is_success() {
-            return Err(Box::new(Error::other("exceeded GitHub API rate limit!")));
+            return Err(Box::new(io::Error::other(RATE_LIMIT_ERROR_TEXT)));
         }
         self.repos = resp.json()?;
         Ok(self)
     }
 
-    pub fn print_all_downloads(&self) -> Result<(), Box<dyn error::Error>> {
+    pub fn print_all_downloads(&self) -> Result<(), Box<dyn Error>> {
         let pool = ThreadPoolBuilder::new().build()?;
         pool.install(|| {
             self.repos.par_iter().for_each(|repo| {
@@ -56,13 +57,13 @@ impl Client {
         Ok(())
     }
 
-    pub fn print_downloads_for_repo(full_name: &String) -> Result<(), Box<dyn error::Error>> {
+    pub fn print_downloads_for_repo(full_name: &String) -> Result<(), Box<dyn Error>> {
         let resp = reqwest::blocking::Client::new()
             .get(format!("https://api.github.com/repos/{full_name}/releases"))
             .header("User-Agent", &USER_AGENT)
             .send()?;
         if !resp.status().is_success() {
-            return Err(Box::new(Error::other("exceeded GitHub API rate limit!")));
+            return Err(Box::new(io::Error::other(RATE_LIMIT_ERROR_TEXT)));
         }
 
         let info: Vec<Release> = resp.json()?;
