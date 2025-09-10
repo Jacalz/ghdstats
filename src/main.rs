@@ -1,9 +1,9 @@
 mod api;
+use anyhow::Result;
 use std::env;
-use std::error::Error;
 use std::process;
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() -> Result<()> {
     let args: Vec<String> = env::args().collect();
     match args.len() {
         0 | 1 | 4.. => {
