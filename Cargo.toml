@@ -9,7 +9,7 @@ lto = true
 panic = "abort"
 
 [dependencies]
-anyhow = "1.0.99"
-rayon = "1.10.0"
-reqwest = { version = "0.12.15", features = ["blocking", "json"] }
-serde = { version = "1.0.140", features = ["derive"] }
+anyhow = "1.0.100"
+rayon = "1.11.0"
+reqwest = { version = "0.12.23", features = ["blocking", "json"] }
+serde = { version = "1.0.228", features = ["derive"] }
