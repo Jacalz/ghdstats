@@ -72,31 +72,37 @@ impl Client {
             writeln!(&mut buffer, "- No releases!")?;
         }
 
-        let mut total_downloads: u64 = 0;
-        for release in info {
-            if release.assets.is_empty() {
-                continue;
-            }
-
-            let old_count = total_downloads;
-
-            writeln!(&mut buffer, "{}:", release.tag_name)?;
-            for asset in release.assets {
-                if asset.download_count == 0 {
-                    continue;
-                }
-
-                total_downloads += asset.download_count;
-                writeln!(&mut buffer, "- {}: {}", asset.name, asset.download_count)?;
-            }
-
-            if old_count == total_downloads {
-                writeln!(&mut buffer, "- No downloads!")?;
-            }
-        }
-
+        let total_downloads = gather_download_stats(info, &mut buffer)?;
         writeln!(&mut buffer, "Total downloads: {total_downloads}")?;
+
         io::stdout().write_all(&buffer)?;
         Ok(())
     }
+}
+
+fn gather_download_stats(info: Vec<Release>, buffer: &mut Vec<u8>) -> Result<u64> {
+    let mut total_downloads: u64 = 0;
+
+    for release in info {
+        if release.assets.is_empty() {
+            continue;
+        }
+
+        let old_count = total_downloads;
+
+        writeln!(buffer, "{}:", release.tag_name)?;
+        for asset in release.assets {
+            if asset.download_count == 0 {
+                continue;
+            }
+
+            total_downloads += asset.download_count;
+            writeln!(buffer, "- {}: {}", asset.name, asset.download_count)?;
+        }
+
+        if old_count == total_downloads {
+            writeln!(buffer, "- No downloads!")?;
+        }
+    }
+    Ok(total_downloads)
 }
