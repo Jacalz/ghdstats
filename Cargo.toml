@@ -10,6 +10,7 @@ panic = "abort"
 
 [dependencies]
 anyhow = "1.0.100"
+clap = { version = "4.5.48", features = ["derive"] }
 rayon = "1.11.0"
 reqwest = { version = "0.12.23", features = ["blocking", "json"] }
 serde = { version = "1.0.228", features = ["derive"] }
